@@ -20,6 +20,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@pump-fun/pump-sdk": "^1.32.0",
     "@solana/web3.js": "^1.98.4",
     "@types/node": "^25.5.0",
     "bs58": "^6.0.0",
