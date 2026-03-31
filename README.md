@@ -1,8 +1,6 @@
 # Quantum-Originated Token (QOT) System
 
-https://github.com/user-attachments/assets/reaz_verification.mp4
-
-<video src="docs/reaz_verification.mp4" controls width="600"></video>
+https://github.com/user-attachments/assets/919155fe-7f19-4c0a-8878-2356ac253ee4
 
 End-to-end verification of the REAZ token: the terminal connects to IBM Quantum Platform, retrieves the raw measurement data for job `d75strfq1anc738crap0`, parses 8,192 shots into 8,067 unique outcomes, ranks them by frequency, and derives the token name REAZ from the winning bitstring — followed by the actual job visible on IBM's Quantum dashboard showing the executed QASM circuit on `ibm_fez`.
 
