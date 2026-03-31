@@ -1,8 +1,14 @@
 # Quantum-Originated Token (QOT) System
 
+**Live token: [REAZ on pump.fun](https://pump.fun/coin/3RPAMTxpdDuuMiR7pmDAkwGxdpRawXhT4sVrAMxSRqr9)** | IBM Job ID: `d75strfq1anc738crap0` | Backend: `ibm_fez` (156 qubits)
+
 I had this concept in the works for many months, but with the sudden interest in quantum resistance, and the gimmicky quantum coins that followed, I rushed to finish it.
 
 A pipeline that runs a quantum circuit on IBM Quantum hardware, uses the measurement results to generate a 4-letter token name, renders qubit measurement data as visual art, uploads it to IPFS, and creates a pump.fun token on Solana — all atomically, with the IBM job ID embedded as provenance metadata.
+
+## The Artwork
+
+The token image is a 4x5 grid of 20 glowing circles — one for each physical qubit on the IBM QPU that participated in the measurement. Each row of 5 qubits encodes one letter of the token name (5 qubits = 2^5 = 32 states, mapped to A-Z). The brightness of each circle reflects that qubit's measurement bias: how often it collapsed to |1> vs |0> across 8,192 shots. Brighter = more |1> measurements, dimmer = more |0>. The binary values beneath each qubit show the winning bitstring, and the right side traces the derivation: 5 bits to a decimal to a letter. Every token produces a unique visual fingerprint because every quantum measurement is unique.
 
 ## How It Works
 
