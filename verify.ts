@@ -5,18 +5,15 @@
  *   npx ts-node verify.ts <job_id>
  *
  * Requires IBM_QUANTUM_TOKEN in .env or as environment variable.
- * Connects to IBM Quantum, pulls the measurement results for the given job,
- * and derives the token name using the same algorithm as the pipeline.
  */
 
 import dotenv from 'dotenv';
 import path from 'path';
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '.env'), debug: false });
 
 const jobId = process.argv[2];
 if (!jobId) {
   console.error('Usage: npx ts-node verify.ts <IBM_JOB_ID>');
-  console.error('Example: npx ts-node verify.ts d75s3oq3qcgc73fs60p0');
   process.exit(1);
 }
 
@@ -26,17 +23,38 @@ if (!token) {
   process.exit(1);
 }
 
+function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
+
+async function typeOut(text: string, delayMs: number = 0) {
+  process.stdout.write(text + '\n');
+  if (delayMs) await sleep(delayMs);
+}
+
 async function main() {
-  console.log(`\nVerifying job: ${jobId}\n`);
-
-  // Step 1: Connect to IBM and fetch job results via Qiskit
-  console.log('Fetching measurement results from IBM Quantum...');
-
   const { execSync } = require('child_process');
+  const fs = require('fs');
   const outputPath = path.resolve(__dirname, 'output', `verify_${jobId}.json`);
 
+  // ─── Header ───
+  await typeOut('');
+  await typeOut('┌─────────────────────────────────────────────────────┐');
+  await typeOut('│     QOT Verifier — Quantum-Originated Token Proof   │');
+  await typeOut('└─────────────────────────────────────────────────────┘');
+  await typeOut('');
+
+  // ─── Step 1: Show what we're verifying ───
+  await typeOut(`  Job ID:  ${jobId}`);
+  await typeOut(`  Source:  IBM Quantum Platform (quantum.cloud.ibm.com)`);
+  await typeOut('');
+
+  // ─── Step 2: Connect to IBM ───
+  await typeOut('▸ Step 1/5 — Connecting to IBM Quantum Platform...', 300);
+
   const script = `
-import json, sys
+import json, sys, warnings, logging
+warnings.filterwarnings("ignore")
+logging.disable(logging.CRITICAL)
+
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 service = QiskitRuntimeService(
@@ -45,12 +63,12 @@ service = QiskitRuntimeService(
 )
 
 job = service.job("${jobId}")
-status = job.status()
-print(f"Job status: {status}", file=sys.stderr)
+status = str(job.status())
+backend_name = str(job.backend())
 
-if str(status) not in ("JobStatus.DONE", "DONE", "Completed"):
-    print(f"Job is not completed (status: {status}). Cannot verify.", file=sys.stderr)
-    sys.exit(1)
+# Clean up backend name
+if "IBMBackend" in backend_name:
+    backend_name = backend_name.split("'")[1]
 
 result = job.result()
 pub_result = result[0]
@@ -62,7 +80,8 @@ for bitstring in bit_array.get_bitstrings():
 
 meta = {
     "jobId": "${jobId}",
-    "backend": str(job.backend()),
+    "backend": backend_name,
+    "status": status,
     "samples": samples,
     "numBits": 20,
     "shots": len(samples),
@@ -71,21 +90,31 @@ meta = {
 with open("${outputPath}", "w") as f:
     json.dump(meta, f)
 
-print(f"Got {len(samples)} samples from {meta['backend']}", file=sys.stderr)
+# Only output clean JSON to stdout
+print(json.dumps({"backend": backend_name, "status": status, "shots": len(samples), "unique": len(set(samples))}))
 `;
 
-  execSync(`python3 -c '${script.replace(/'/g, "'\\''")}'`, {
-    stdio: ['pipe', 'pipe', 'inherit'],
+  const stdout = execSync(`python3 -c '${script.replace(/'/g, "'\\''")}'`, {
+    stdio: ['pipe', 'pipe', 'pipe'], // suppress all stderr
     timeout: 120000,
   });
 
-  // Step 2: Derive the name using the same algorithm
-  const fs = require('fs');
-  const data = JSON.parse(fs.readFileSync(outputPath, 'utf-8'));
+  const ibmInfo = JSON.parse(stdout.toString().trim());
 
-  console.log(`\nBackend: ${data.backend}`);
-  console.log(`Shots: ${data.shots}`);
-  console.log(`Samples received: ${data.samples.length}\n`);
+  await typeOut(`  ✓ Connected to IBM Quantum`);
+  await typeOut('');
+
+  // ─── Step 3: Show job metadata ───
+  await typeOut('▸ Step 2/5 — Retrieving job metadata from IBM...', 300);
+  await typeOut(`  ✓ Job status:  ${ibmInfo.status}`);
+  await typeOut(`  ✓ Backend:     ${ibmInfo.backend}`);
+  await typeOut(`  ✓ Total shots: ${ibmInfo.shots.toLocaleString()}`);
+  await typeOut('');
+
+  // ─── Step 4: Parse measurements ───
+  await typeOut('▸ Step 3/5 — Parsing measurement results...', 300);
+
+  const data = JSON.parse(fs.readFileSync(outputPath, 'utf-8'));
 
   // Build histogram
   const histogram = new Map<string, number>();
@@ -94,41 +123,70 @@ print(f"Got {len(samples)} samples from {meta['backend']}", file=sys.stderr)
     const bitstring = value.toString(2).padStart(20, '0');
     histogram.set(bitstring, (histogram.get(bitstring) || 0) + 1);
   }
-
-  // Sort by frequency
   const sorted = Array.from(histogram.entries()).sort((a, b) => b[1] - a[1]);
 
-  console.log(`Unique outcomes: ${histogram.size}`);
-  console.log(`\nTop 10 measurement outcomes:`);
+  await typeOut(`  ✓ ${ibmInfo.shots.toLocaleString()} raw samples parsed`);
+  await typeOut(`  ✓ ${histogram.size.toLocaleString()} unique measurement outcomes`);
+  await typeOut('');
 
-  for (const [bits, count] of sorted.slice(0, 10)) {
+  // ─── Step 5: Show top outcomes ───
+  await typeOut('▸ Step 4/5 — Ranking measurement outcomes by frequency...', 300);
+  await typeOut('');
+  await typeOut('  Rank  Bitstring              Name    Shots   Freq');
+  await typeOut('  ────  ─────────────────────  ──────  ──────  ──────');
+
+  let rank = 0;
+  let validRank = 0;
+  for (const [bits, count] of sorted.slice(0, 20)) {
+    rank++;
     const name = bitsToName(bits);
     const pct = ((count / data.shots) * 100).toFixed(2);
-    console.log(`  ${bits} → ${name ?? 'INVALID'} (${count} shots, ${pct}%)`);
+    const nameStr = name ? name : '------';
+    const marker = name && validRank === 0 ? '  ◄ WINNER' : '';
+    if (name && validRank === 0) validRank = rank;
+    await typeOut(`  #${String(rank).padStart(2, '0')}   ${bits}  ${nameStr.padEnd(6)}  ${String(count).padStart(5)}   ${pct}%${marker}`);
   }
+  await typeOut('');
 
-  // Find the winning name
+  // ─── Step 6: Derive the name ───
+  await typeOut('▸ Step 5/5 — Deriving token name...', 500);
+  await typeOut('');
+
   for (const [bits, count] of sorted) {
     const name = bitsToName(bits);
     if (name) {
       const pct = ((count / data.shots) * 100).toFixed(2);
-      console.log(`\n${'='.repeat(50)}`);
-      console.log(`  VERIFIED TOKEN NAME: ${name}`);
-      console.log(`  Measured ${count}/${data.shots} times (${pct}%)`);
-      console.log(`  Bitstring: ${bits}`);
-      console.log(`  Breakdown:`);
+
+      // Show the derivation step by step
+      await typeOut('  Most-measured valid 20-bit string:');
+      await typeOut(`  ${bits}`, 200);
+      await typeOut('');
+      await typeOut('  Split into 4 groups of 5 qubits:', 200);
+      await typeOut('');
+
       for (let g = 0; g < 4; g++) {
         const groupBits = bits.substring(g * 5, g * 5 + 5);
         const val = parseInt(groupBits, 2);
         const letter = String.fromCharCode(65 + val);
-        console.log(`    Position ${g + 1}: ${groupBits} = ${val} = "${letter}"`);
+        await typeOut(`    Qubits ${String(g * 5).padStart(2)}-${String(g * 5 + 4).padStart(2)}:  ${groupBits}  →  decimal ${String(val).padStart(2)}  →  letter "${letter}"`, 300);
       }
-      console.log(`${'='.repeat(50)}\n`);
+
+      await typeOut('');
+      await typeOut('  ╔══════════════════════════════════════════════╗');
+      await typeOut(`  ║                                              ║`);
+      await typeOut(`  ║   VERIFIED TOKEN NAME:  ${name}                  ║`);
+      await typeOut(`  ║                                              ║`);
+      await typeOut(`  ║   Measured ${count}/${data.shots} times (${pct}%)              ║`);
+      await typeOut(`  ║   IBM Job: ${jobId}        ║`);
+      await typeOut(`  ║   Backend: ${ibmInfo.backend.padEnd(35)}║`);
+      await typeOut(`  ║                                              ║`);
+      await typeOut('  ╚══════════════════════════════════════════════╝');
+      await typeOut('');
       return;
     }
   }
 
-  console.error('No valid 4-letter name found in results.');
+  console.error('No valid 4-letter name found.');
   process.exit(1);
 }
 

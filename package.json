@@ -13,7 +13,7 @@
     "test:ipfs": "ts-node tests/test-ipfs.ts",
     "test:solana": "ts-node tests/test-solana.ts",
     "test:e2e": "ts-node tests/test-e2e.ts",
-    "verify": "ts-node verify.ts"
+    "verify": "DOTENV_CONFIG_QUIET=true ts-node verify.ts"
   },
   "keywords": [],
   "author": "",
