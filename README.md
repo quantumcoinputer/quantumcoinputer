@@ -6,6 +6,17 @@ I had this concept in the works for many months, but with the sudden interest in
 
 A pipeline that runs a quantum circuit on IBM Quantum hardware, uses the measurement results to generate a 4-letter token name, renders qubit measurement data as visual art, uploads it to IPFS, and creates a pump.fun token on Solana — all atomically, with the IBM job ID embedded as provenance metadata.
 
+Verified. Job d75strfq1anc738crap0 on ibm_fez reproduces REAZ exactly:
+
+```
+R = 10001 = 17
+E = 00100 = 4
+A = 00000 = 0
+Z = 11001 = 25
+```
+
+The most-measured valid outcome across 8,192 shots, 3 occurrences. The name was not chosen. It was measured.
+
 ## The Artwork
 
 <img src="docs/reaz_artwork.png" width="400" alt="REAZ qubit measurement grid" />
