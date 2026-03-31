@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+dist/
+
+# Environment & secrets
+.env
+*.pem
+*.key
+
+# Solana keypairs — NEVER commit private keys
+wallet-keypair.json
+*-keypair.json
+keypair*.json
+
+# Generated output
+output/
+
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.Python
+
+# Superseded/test-only files
+src/quantum/transpile_circuit.py
+src/art/circuit-renderer.ts
+tests/test-art.ts
+tests/test-deploy.ts
