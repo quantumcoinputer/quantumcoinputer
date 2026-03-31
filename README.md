@@ -1,5 +1,11 @@
 # Quantum-Originated Token (QOT) System
 
+https://github.com/user-attachments/assets/reaz_verification.mp4
+
+<video src="docs/reaz_verification.mp4" controls width="600"></video>
+
+End-to-end verification of the REAZ token: the terminal connects to IBM Quantum Platform, retrieves the raw measurement data for job `d75strfq1anc738crap0`, parses 8,192 shots into 8,067 unique outcomes, ranks them by frequency, and derives the token name REAZ from the winning bitstring — followed by the actual job visible on IBM's Quantum dashboard showing the executed QASM circuit on `ibm_fez`.
+
 I had this concept in the works for many months, but with the sudden interest in quantum resistance, and the gimmicky quantum coins that followed, I rushed to finish it.
 
 A pipeline that runs a quantum circuit on IBM Quantum hardware, uses the measurement results to generate a 4-letter token name, renders qubit measurement data as visual art, uploads it to IPFS, and creates a pump.fun token on Solana — all atomically, with the IBM job ID embedded as provenance metadata.
