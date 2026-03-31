@@ -8,6 +8,8 @@ A pipeline that runs a quantum circuit on IBM Quantum hardware, uses the measure
 
 ## The Artwork
 
+<img src="docs/reaz_artwork.png" width="400" alt="REAZ qubit measurement grid" />
+
 The token image is a 4x5 grid of 20 glowing circles — one for each physical qubit on the IBM QPU that participated in the measurement. Each row of 5 qubits encodes one letter of the token name (5 qubits = 2^5 = 32 states, mapped to A-Z). The brightness of each circle reflects that qubit's measurement bias: how often it collapsed to |1> vs |0> across 8,192 shots. Brighter = more |1> measurements, dimmer = more |0>. The binary values beneath each qubit show the winning bitstring, and the right side traces the derivation: 5 bits to a decimal to a letter. Every token produces a unique visual fingerprint because every quantum measurement is unique.
 
 ## How It Works
