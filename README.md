@@ -1,7 +1,5 @@
 # Quantum-Originated Token (QOT) System
 
-**Live token: [REAZ on pump.fun](https://pump.fun/coin/3RPAMTxpdDuuMiR7pmDAkwGxdpRawXhT4sVrAMxSRqr9)** | IBM Job ID: `d75strfq1anc738crap0` | Backend: `ibm_fez` (156 qubits)
-
 I had this concept in the works for many months, but with the sudden interest in quantum resistance, and the gimmicky quantum coins that followed, I rushed to finish it.
 
 A pipeline that runs a quantum circuit on IBM Quantum hardware, uses the measurement results to generate a 4-letter token name, renders qubit measurement data as visual art, uploads it to IPFS, and creates a pump.fun token on Solana — all atomically, with the IBM job ID embedded as provenance metadata.
@@ -253,3 +251,11 @@ You need an IBM Quantum account (free) and your `IBM_QUANTUM_TOKEN` set in `.env
 - Solana transactions are signed locally, submitted via public RPC
 - IBM API token is used only for circuit execution
 - No secrets are stored in code or committed to git
+
+## Live Token
+
+```
+REAZ — 3RPAMTxpdDuuMiR7pmDAkwGxdpRawXhT4sVrAMxSRqr9
+```
+
+IBM Job ID: `d75strfq1anc738crap0` | Backend: `ibm_fez` (156 qubits)
